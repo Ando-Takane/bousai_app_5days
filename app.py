@@ -156,6 +156,17 @@ SHELTER_REQUIREMENTS = {
     'pets': 'ペット'
 }
 
+CONGESTION_OPTIONS = ('混雑', 'やや混雑', '空き')
+CAPACITY_OPTIONS = (100, 200)
+CONGESTION_ORDER = {'空き': 0, 'やや混雑': 1, '混雑': 2}
+
+def sort_shelters_by_congestion(items):
+    """避難所を空き、やや混雑、混雑の順に並べる"""
+    return sorted(
+        items,
+        key=lambda shelter: CONGESTION_ORDER.get(shelter.get('congestion'), 1)
+    )
+
 def shelter_supports(shelter, requirement):
     """避難所が検索条件に対応しているかを確認する"""
     supports = shelter.get('supports', [])
@@ -172,7 +183,7 @@ def search_shelters(location, requirements):
     for shelter in shelters:
         shelter_location = ' '.join(
             str(shelter.get(field, ''))
-            for field in ('location', 'district', 'address')
+            for field in ('name', 'location', 'district', 'address')
         ).lower()
         if location and location not in shelter_location:
             continue
@@ -328,20 +339,50 @@ def shelter_register():
             return render_template(
                 'shelter_register.html',
                 error=True,
-                message='避難所名を入力してください。'
+                message='避難所名を入力してください。',
+                requirement_labels=SHELTER_REQUIREMENTS
             )
 
         next_id = max((shelter.get('id', 0) for shelter in shelters), default=0) + 1
-        shelters.append({'id': next_id, 'name': name})
+        selected_supports = [
+            requirement for requirement in SHELTER_REQUIREMENTS
+            if request.form.get(requirement) == '1'
+        ]
+        congestion = request.form.get('congestion', '空き')
+        if congestion not in CONGESTION_OPTIONS:
+            congestion = '空き'
+        try:
+            capacity = int(request.form.get('capacity', '100'))
+        except ValueError:
+            capacity = 100
+        if capacity not in CAPACITY_OPTIONS:
+            capacity = 100
+        shelters.append({
+            'id': next_id,
+            'name': name,
+            'supports': selected_supports,
+            'address': request.form.get('address', '').strip() or '住所情報は未登録です',
+            'congestion': congestion,
+            'congestion_updated_at': get_japan_time(),
+            'capacity': capacity
+        })
         save_shelters()
         return render_template(
             'shelter_register.html',
             success=True,
             message=f'「{name}」を登録しました。',
-            registered_name=name
+            registered_name=name,
+            requirement_labels=SHELTER_REQUIREMENTS,
+            congestion_options=CONGESTION_OPTIONS,
+            capacity_options=CAPACITY_OPTIONS
         )
 
-    return render_template('shelter_register.html')
+    return render_template(
+        'shelter_register.html',
+        requirement_labels=SHELTER_REQUIREMENTS,
+        congestion_options=CONGESTION_OPTIONS,
+        capacity_options=CAPACITY_OPTIONS
+    )
 
 # 避難所検索ページ
 @app.route('/shelter_search')
@@ -353,7 +394,7 @@ def shelter_search():
 def all_shelters():
     return render_template(
         'search_results.html',
-        results=shelters,
+        results=sort_shelters_by_congestion(shelters),
         location='',
         selected_requirements=[],
         requirement_labels=SHELTER_REQUIREMENTS
@@ -375,7 +416,9 @@ def search_results():
         requirement for requirement in SHELTER_REQUIREMENTS
         if request.args.get(requirement) == '1'
     ]
-    results = search_shelters(location, selected_requirements)
+    results = sort_shelters_by_congestion(
+        search_shelters(location, selected_requirements)
+    )
     return render_template(
         'search_results.html',
         results=results,

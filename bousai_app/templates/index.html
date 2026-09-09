@@ -5,7 +5,7 @@
     <h2 class="card-heading" id="map-heading">
         <span class="heading-label">
             <svg class="heading-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5.1 7 13 7 13s7-7.9 7-13a7 7 0 0 0-7-7Zm0 9.6A2.6 2.6 0 1 1 12 6a2.6 2.6 0 0 1 0 5.6Z"/></svg>
-            避難所マップ
+            <span data-ja="避難所マップ" data-en="Shelter map">避難所マップ</span>
         </span>
     </h2>
     <div id="shelterMap" style="height: 365px;"></div>
@@ -15,12 +15,12 @@
     <h2 class="card-heading" id="weather-heading">
         <span class="heading-label">
             <svg class="heading-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M7 17.5h9a4 4 0 0 0 .4-8A5.6 5.6 0 0 0 5.7 11 3.3 3.3 0 0 0 7 17.5Z"/><path d="M7 5.5v2M3.8 7l1.4 1M13.5 7l-1.4 1M4 12H2"/><path d="m17 4 .8 1.8L20 6.5l-2.2.7L17 9l-.8-1.8-2.2-.7 2.2-.7L17 4Z"/></svg>
-            青森市 気象警報・注意報
+            <span data-ja="青森市 気象警報・注意報" data-en="Aomori City weather warnings">青森市 気象警報・注意報</span>
         </span>
-        <span class="refresh-label"><svg class="refresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8.1 8.1 0 0 0-14.8-3L3 11"/><path d="M3 5v6h6"/><path d="M4 13a8.1 8.1 0 0 0 14.8 3L21 13"/><path d="M21 19v-6h-6"/></svg>10分おき自動更新</span>
+        <span class="refresh-label"><svg class="refresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8.1 8.1 0 0 0-14.8-3L3 11"/><path d="M3 5v6h6"/><path d="M4 13a8.1 8.1 0 0 0 14.8 3L21 13"/><path d="M21 19v-6h-6"/></svg><span data-ja="10分おき自動更新" data-en="Auto-refresh every 10 minutes">10分おき自動更新</span></span>
     </h2>
     <div class="weather-panel" id="weatherContent">
-        <p>読み込み中...</p>
+        <p data-ja="読み込み中..." data-en="Loading...">読み込み中...</p>
     </div>
 </section>
 
@@ -50,9 +50,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateWeatherContent(data) {
         const weatherContent = document.getElementById('weatherContent');
+        const isEnglish = window.bousaiLanguage === 'en';
 
         if (data.error) {
-            weatherContent.innerHTML = '<p class="weather-status">気象情報の取得に失敗しました</p>';
+            weatherContent.innerHTML = `<p class="weather-status">${isEnglish ? 'Failed to load weather information.' : '気象情報の取得に失敗しました'}</p>`;
             return;
         }
 
@@ -64,18 +65,19 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             warningsHtml += '</ul>';
         } else {
-            warningsHtml = '<p class="weather-status"><svg class="status-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm-1 15-4-4 1.4-1.4L11 13.2l4.6-4.6L17 10Z"/></svg>現在、警報・注意報は発表されていません</p>';
+            warningsHtml = `<p class="weather-status"><svg class="status-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm-1 15-4-4 1.4-1.4L11 13.2l4.6-4.6L17 10Z"/></svg>${isEnglish ? 'No warnings or advisories are currently active.' : '現在、警報・注意報は発表されていません'}</p>`;
         }
 
         weatherContent.innerHTML = `
             <p class="weather-location"><svg class="status-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5.1 7 13 7 13s7-7.9 7-13a7 7 0 0 0-7-7Zm0 9.6A2.6 2.6 0 1 1 12 6a2.6 2.6 0 0 1 0 5.6Z"/></svg>${data.area_name || '青森市'}</p>
             ${warningsHtml}
-            <p class="weather-meta">◷ データ取得: <span id="lastFetchTime">${data.last_fetch_time || '更新中...'}</span></p>
-            <p class="weather-meta">◔ 気象庁発表: ${data.report_time || '不明'}</p>
+            <p class="weather-meta">◷ ${isEnglish ? 'Fetched: ' : 'データ取得: '}<span id="lastFetchTime">${data.last_fetch_time || (isEnglish ? 'Updating...' : '更新中...')}</span></p>
+            <p class="weather-meta">◔ ${isEnglish ? 'JMA report: ' : '気象庁発表: '}${data.report_time || (isEnglish ? 'Unknown' : '不明')}</p>
         `;
     }
 
     updateWeatherWarnings();
+    window.addEventListener('languagechange', updateWeatherWarnings);
     setInterval(updateWeatherWarnings, 600000);
 });
 </script>

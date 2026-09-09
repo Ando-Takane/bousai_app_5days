@@ -4,43 +4,145 @@
 <section class="results-header">
   <div>
     <p class="eyebrow">SEARCH RESULTS</p>
-    <h1>検索結果</h1>
-    <p class="result-count"><strong>{{ results|length }}</strong> 件の避難所が見つかりました</p>
+    <h1 data-ja="検索結果" data-en="Search results">検索結果</h1>
+    <p class="result-count" data-ja="{{ results|length }} 件の避難所が見つかりました" data-en="{{ results|length }} shelter(s) found"><strong>{{ results|length }}</strong> 件の避難所が見つかりました</p>
   </div>
-  <a class="edit-search" href="/shelter_search">条件を変更</a>
+  <a class="edit-search" href="/shelter_search" data-ja="条件を変更" data-en="Change criteria">条件を変更</a>
 </section>
 
 {% if location or selected_requirements %}
 <div class="applied-filters">
-  {% if location %}<span class="filter-chip">場所: {{ location }}</span>{% endif %}
+  {% if location %}<span class="filter-chip" data-ja="場所: {{ location }}" data-en="Location: {{ location }}">場所: {{ location }}</span>{% endif %}
   {% for requirement in selected_requirements %}<span class="filter-chip">{{ requirement_labels[requirement] }}</span>{% endfor %}
 </div>
 {% endif %}
 
 {% if results %}
-  <div class="result-list">
-    {% for shelter in results %}
-    <article class="shelter-result">
-      <div class="shelter-result-icon" aria-hidden="true">⌖</div>
-      <div class="shelter-result-body">
-        <h2>{{ shelter.name }}</h2>
-        <p class="shelter-location">{{ shelter.location or shelter.address or shelter.district or '場所情報は登録されていません' }}</p>
-        <div class="support-tags">
-          {% for requirement, label in requirement_labels.items() %}
-            {% if shelter_supports(shelter, requirement) %}<span class="support-tag">{{ label }}</span>{% endif %}
-          {% endfor %}
+  {% set mapped_results = results | selectattr('latitude', 'defined') | selectattr('longitude', 'defined') | list %}
+  <div class="results-content{% if mapped_results %} has-map{% endif %}">
+    <div class="result-list">
+      {% for shelter in results %}
+      <article class="shelter-result">
+        <div class="result-number" aria-label="地図の{{ loop.index }}番">{{ loop.index }}</div>
+        <div class="shelter-result-body">
+          <h2 class="shelter-name" data-shelter-name="{{ shelter.name }}">{{ shelter.name }}</h2>
+          <p class="shelter-location">⌖ <span class="shelter-address" data-shelter-address="{{ shelter.address or shelter.location or shelter.district or '住所情報は未登録です' }}">{{ shelter.address or shelter.location or shelter.district or '住所情報は未登録です' }}</span></p>
+          <div class="shelter-status">
+            <span class="status-badge status-{{ shelter.congestion or '空き' }}" data-ja="{{ shelter.congestion or '空き' }}" data-en="{% if shelter.congestion == '混雑' %}Crowded{% elif shelter.congestion == 'やや混雑' %}Somewhat crowded{% else %}Available{% endif %}">{{ shelter.congestion or '空き' }}</span>
+            <span class="capacity-badge" data-ja="収容 {{ shelter.capacity or 100 }}人" data-en="Capacity: {{ shelter.capacity or 100 }}">収容 {{ shelter.capacity or 100 }}人</span>
+          </div>
+          <p class="congestion-updated" data-ja="更新: {{ shelter.congestion_updated_at or '登録時刻は未登録です' }}" data-en="Updated: {{ shelter.congestion_updated_at or 'Not registered' }}">更新: {{ shelter.congestion_updated_at or '登録時刻は未登録です' }}</p>
+          <div class="support-tags">
+            {% for requirement, label in requirement_labels.items() %}
+              {% if shelter_supports(shelter, requirement) %}<span class="support-tag" data-ja="{{ label }}" data-en="{% if requirement == 'elderly' %}Elderly people{% elif requirement == 'children' %}Families with children{% elif requirement == 'foreigners' %}Foreign visitors{% elif requirement == 'care' %}People needing care{% else %}Pets{% endif %}">{{ label }}</span>{% endif %}
+            {% endfor %}
+          </div>
         </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% if mapped_results %}
+    <section class="results-map-panel" aria-labelledby="results-map-heading">
+      <div class="results-map-heading">
+        <h2 id="results-map-heading" data-ja="避難所マップ" data-en="Shelter map">避難所マップ</h2>
+          <span data-ja="{{ mapped_results|length }}施設を表示中" data-en="Showing {{ mapped_results|length }} shelters">{{ mapped_results|length }}施設を表示中</span>
       </div>
-      <span class="result-arrow" aria-hidden="true">›</span>
-    </article>
-    {% endfor %}
+      <div id="resultsMap" class="results-map"></div>
+      <p id="routeStatus" class="route-status" data-ja="避難所のマーカーを押すと、現在地からの経路を表示します。" data-en="Select a shelter marker to show the route from your current location.">避難所のマーカーを押すと、現在地からの経路を表示します。</p>
+    </section>
+    {% endif %}
   </div>
 {% else %}
   <section class="empty-results">
     <div class="empty-icon" aria-hidden="true">⌕</div>
-    <h2>条件に合う避難所が見つかりませんでした</h2>
-    <p>場所を広げるか、必要なサポートの条件を減らして再検索してください。</p>
-    <a class="search-submit" href="/shelter_search">検索画面に戻る</a>
+    <h2 data-ja="条件に合う避難所が見つかりませんでした" data-en="No shelters match your criteria">条件に合う避難所が見つかりませんでした</h2>
+    <p data-ja="場所を広げるか、必要なサポートの条件を減らして再検索してください。" data-en="Try a broader location or fewer support needs.">場所を広げるか、必要なサポートの条件を減らして再検索してください。</p>
+    <a class="search-submit" href="/shelter_search" data-ja="検索画面に戻る" data-en="Back to search">検索画面に戻る</a>
   </section>
+{% endif %}
+
+{% if mapped_results %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const shelters = {{ mapped_results | list | tojson }};
+  const map = L.map('resultsMap');
+  const bounds = [];
+  let routeLayer = null;
+  let currentLocationMarker = null;
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+
+  function showRouteTo(shelter) {
+    const isEnglish = window.bousaiLanguage === 'en';
+    if (!navigator.geolocation) {
+      alert(isEnglish ? 'This browser cannot access your location.' : 'このブラウザでは現在地を取得できません。');
+      return;
+    }
+
+    const routeStatus = document.getElementById('routeStatus');
+    routeStatus.textContent = isEnglish ? `Getting a route to ${shelter.name}...` : `${shelter.name}までの経路を取得しています...`;
+
+    navigator.geolocation.getCurrentPosition(function(position) {
+      const current = [position.coords.latitude, position.coords.longitude];
+      const destination = [shelter.latitude, shelter.longitude];
+      const url = `https://router.project-osrm.org/route/v1/driving/${current[1]},${current[0]};${destination[1]},${destination[0]}?overview=full&geometries=geojson`;
+
+      if (currentLocationMarker) map.removeLayer(currentLocationMarker);
+      currentLocationMarker = L.circleMarker(current, {
+        radius: 8, color: '#285bab', fillColor: '#fff', fillOpacity: 1, weight: 3
+      }).addTo(map).bindPopup('現在地');
+
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          if (!data.routes || !data.routes.length) {
+            throw new Error('route not found');
+          }
+          if (routeLayer) map.removeLayer(routeLayer);
+          routeLayer = L.geoJSON(data.routes[0].geometry, {
+            style: {color: '#e4572e', weight: 6, opacity: 0.85}
+          }).addTo(map);
+          map.fitBounds(routeLayer.getBounds(), {padding: [28, 28]});
+          const distance = (data.routes[0].distance / 1000).toFixed(1);
+          const minutes = Math.round(data.routes[0].duration / 60);
+          routeStatus.textContent = isEnglish ? `About ${minutes} min / ${distance} km to ${shelter.name}` : `${shelter.name}まで 約${minutes}分・${distance}km`;
+        })
+        .catch(function() {
+          routeStatus.textContent = isEnglish ? 'Could not get the route. Please check the locations on the map.' : '経路を取得できませんでした。地図上の位置を確認してください。';
+        });
+    }, function() {
+      routeStatus.textContent = isEnglish ? 'Could not access your location. Please allow location access in your browser.' : '現在地を取得できませんでした。ブラウザの位置情報を許可してください。';
+    }, {enableHighAccuracy: true, timeout: 10000});
+  }
+
+  shelters.forEach(function(shelter, index) {
+    const point = [shelter.latitude, shelter.longitude];
+    bounds.push(point);
+    const displayName = window.translateShelterName(shelter.name);
+    const displayAddress = window.translateShelterAddress(shelter.address || '住所情報は未登録です');
+    const isEnglish = window.bousaiLanguage === 'en';
+    const markerIcon = L.divIcon({
+      className: 'numbered-marker',
+      html: `<span><b>${index + 1}</b></span>`,
+      iconSize: [32, 32],
+      iconAnchor: [16, 16]
+    });
+    L.marker(point, {icon: markerIcon}).addTo(map).bindPopup(`
+      <strong>${index + 1}. ${displayName}</strong><br>
+      ${displayAddress}<br>
+      ${isEnglish ? (shelter.congestion === '混雑' ? 'Crowded' : shelter.congestion === 'やや混雑' ? 'Somewhat crowded' : 'Available') : (shelter.congestion || '空き')} / ${isEnglish ? 'Capacity: ' : '収容 '}${shelter.capacity || 100}${isEnglish ? '' : '人'}<br>
+      ${isEnglish ? 'Updated: ' : '更新: '}${shelter.congestion_updated_at || (isEnglish ? 'Not registered' : '登録時刻は未登録です')}
+    `).on('click', function() {
+      showRouteTo(shelter);
+    });
+  });
+
+  map.fitBounds(bounds, {padding: [28, 28], maxZoom: 15});
+});
+</script>
 {% endif %}
 {% endblock %}

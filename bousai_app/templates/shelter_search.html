@@ -5,30 +5,30 @@
 	<div class="search-title-row">
 		<div>
 			<p class="eyebrow">SHELTER SEARCH</p>
-			<h1>避難所を探す</h1>
-			<p class="search-lead">場所と必要なサポートを選ぶと、条件に合う避難所を表示します。</p>
+			<h1 data-ja="避難所を探す" data-en="Find a shelter">避難所を探す</h1>
+			<p class="search-lead" data-ja="場所と必要なサポートを選ぶと、条件に合う避難所を表示します。" data-en="Choose a location and support needs to find matching shelters.">場所と必要なサポートを選ぶと、条件に合う避難所を表示します。</p>
 		</div>
 		<span class="search-mark" aria-hidden="true">⌕</span>
 	</div>
 
 	<form action="/search_results" method="get" class="search-form">
-		<label for="location">場所</label>
-		<input type="search" id="location" name="location" placeholder="地区名・住所を入力" autocomplete="address-level2">
+		<label for="location" data-ja="場所" data-en="Location">場所</label>
+		<input type="search" id="location" name="location" placeholder="地区名・住所を入力" data-placeholder-ja="地区名・住所を入力" data-placeholder-en="Enter a district or address" autocomplete="address-level2">
 
 		<fieldset>
-			<legend>必要なサポート</legend>
+			<legend data-ja="必要なサポート" data-en="Support needs">必要なサポート</legend>
 			<div class="requirement-grid">
-				<label><input type="checkbox" name="elderly" value="1"> <span>高齢者</span></label>
-				<label><input type="checkbox" name="children" value="1"> <span>子供連れ</span></label>
-				<label><input type="checkbox" name="foreigners" value="1"> <span>外国人</span></label>
-				<label><input type="checkbox" name="care" value="1"> <span>要介護者</span></label>
-				<label><input type="checkbox" name="pets" value="1"> <span>ペット</span></label>
+				<label><input type="checkbox" name="elderly" value="1"> <span data-ja="高齢者" data-en="Elderly people">高齢者</span></label>
+				<label><input type="checkbox" name="children" value="1"> <span data-ja="子供連れ" data-en="Families with children">子供連れ</span></label>
+				<label><input type="checkbox" name="foreigners" value="1"> <span data-ja="外国人" data-en="Foreign visitors">外国人</span></label>
+				<label><input type="checkbox" name="care" value="1"> <span data-ja="要介護者" data-en="People needing care">要介護者</span></label>
+				<label><input type="checkbox" name="pets" value="1"> <span data-ja="ペット" data-en="Pets">ペット</span></label>
 			</div>
 		</fieldset>
 
-		<button type="submit" class="search-submit">条件に合う避難所を検索</button>
+		<button type="submit" class="search-submit" data-ja="条件に合う避難所を検索" data-en="Search shelters">条件に合う避難所を検索</button>
 	</form>
 
-	<a class="all-shelters-link" href="/all_shelters">条件を指定せず全施設を見る</a>
+	<a class="all-shelters-link" href="/all_shelters" data-ja="条件を指定せず全施設を見る" data-en="View all shelters">条件を指定せず全施設を見る</a>
 </section>
 {% endblock %}

@@ -27,6 +27,9 @@
       font-size: 16px;
     }
 
+    body[data-font-size="large"] { zoom: 1.1; }
+    body[data-font-size="x-large"] { zoom: 1.2; }
+
     .app-header {
       height: 70px;
       background: linear-gradient(110deg, var(--brand-blue-dark), var(--brand-blue));
@@ -60,6 +63,11 @@
     }
 
     .menu-button svg { display: block; width: 27px; height: 27px; }
+
+    .header-actions { display: flex; align-items: center; gap: 8px; }
+    .header-setting { display: flex; align-items: center; gap: 5px; color: #fff; font-size: 12px; font-weight: 700; }
+    .header-setting select { min-width: 92px; padding: 7px 24px 7px 8px; border: 1px solid rgba(255, 255, 255, .4); border-radius: 6px; background: rgba(255, 255, 255, .14); color: #fff; font: inherit; cursor: pointer; }
+    .header-setting select option { background: #fff; color: #35445a; }
 
     .main-nav {
       display: none;
@@ -169,14 +177,31 @@
     .edit-search { margin-top: 19px; padding: 10px 14px; border: 1px solid #cbd9ef; border-radius: 8px; }
     .applied-filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 23px 0 15px; }
     .filter-chip, .support-tag { display: inline-block; padding: 5px 10px; border-radius: 999px; background: #edf4ff; color: #285aa8; font-size: 13px; font-weight: 700; }
-    .result-list { display: grid; gap: 13px; margin-top: 28px; }
+    .results-content { margin-top: 28px; }
+    .results-content.has-map { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); align-items: start; gap: 20px; }
+    .result-list { display: grid; gap: 13px; }
+    .results-map-panel { position: sticky; top: 20px; padding: 18px; border: 1px solid #edf1f7; border-radius: 17px; background: #fff; box-shadow: 0 6px 23px rgba(56, 76, 107, .08); }
+    .results-map-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 13px; }
+    .results-map-heading h2 { margin: 0; color: #285aa8; font-size: 20px; }
+    .results-map-heading span { color: #718096; font-size: 13px; }
+    .results-map { height: 350px; border-radius: 11px; }
+    .route-status { margin: 12px 2px 0; color: #667085; font-size: 13px; line-height: 1.6; }
     .shelter-result { display: flex; align-items: center; gap: 17px; padding: 20px 23px; }
-    .shelter-result-icon { display: grid; place-items: center; width: 43px; height: 43px; flex: 0 0 auto; border-radius: 50%; background: #eaf2ff; color: #285aa8; font-size: 28px; }
+    .result-number { display: grid; place-items: center; width: 34px; height: 34px; flex: 0 0 auto; border-radius: 50%; background: #285bab; color: #fff; font-size: 15px; font-weight: 800; }
+    .numbered-marker { border: 0; background: transparent; }
+    .numbered-marker span { display: grid; place-items: center; width: 32px; height: 32px; border: 3px solid #fff; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); background: #285bab; color: #fff; box-shadow: 0 2px 7px rgba(36, 67, 116, .35); font-size: 13px; font-weight: 800; }
+    .numbered-marker span b { display: block; transform: rotate(45deg); font-size: 13px; }
     .shelter-result-body { min-width: 0; flex: 1; }
     .shelter-result h2 { margin: 0; color: #34445a; font-size: 19px; }
     .shelter-location { margin: 7px 0 11px; color: #768396; font-size: 14px; }
+    .shelter-status { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 11px; }
+    .status-badge, .capacity-badge { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 800; }
+    .status-混雑 { background: #ffe8e5; color: #c63e35; }
+    .status-やや混雑 { background: #fff4d9; color: #a56b00; }
+    .status-空き { background: #e5f7eb; color: #218744; }
+    .capacity-badge { background: #f0f3f7; color: #59687a; }
+    .congestion-updated { margin: 0 0 11px; color: #8a96a6; font-size: 12px; }
     .support-tags { display: flex; flex-wrap: wrap; gap: 6px; }
-    .result-arrow { color: #91a0b3; font-size: 28px; }
     .empty-results { margin-top: 28px; padding: 45px 24px; text-align: center; }
     .empty-results .empty-icon { font-size: 48px; }
     .empty-results h2 { margin: 15px 0 8px; color: #34445a; font-size: 20px; }
@@ -186,6 +211,10 @@
       .app-header { height: 62px; }
       .header-inner { width: calc(100% - 28px); }
       .brand { font-size: 21px; }
+      .header-actions { gap: 3px; }
+      .header-setting { gap: 2px; font-size: 10px; }
+      .header-setting select { min-width: 68px; padding: 6px 16px 6px 5px; font-size: 11px; }
+      .menu-button { padding: 6px 3px 6px 5px; }
       .main-nav { top: 56px; right: 14px; }
       .page-shell { width: calc(100% - 24px); margin-top: 18px; }
       .dashboard-card { padding: 20px 14px 18px; margin-bottom: 20px; border-radius: 13px; }
@@ -198,28 +227,47 @@
       .requirement-grid label:last-child { grid-column: 1 / -1; }
       .shelter-result { padding: 16px 14px; gap: 11px; }
       .shelter-result h2 { font-size: 16px; }
-      .shelter-result-icon { width: 36px; height: 36px; font-size: 23px; }
       .results-header { align-items: flex-end; }
+      .results-content.has-map { display: flex; flex-direction: column; }
+      .results-map-panel { position: static; order: -1; width: 100%; }
+      .results-map { height: 300px; }
     }
   </style>
 </head>
 <body>
   <header class="app-header">
     <div class="header-inner">
-      <a class="brand" href="/">防災アプリ</a>
-      <button class="menu-button" type="button" aria-label="メニューを開く" aria-expanded="false" aria-controls="mainNav">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-      </button>
+      <a class="brand" href="/" data-ja="防災アプリ" data-en="Disaster App">防災アプリ</a>
+      <div class="header-actions">
+        <label class="header-setting">
+          <span data-ja="言語" data-en="Language">言語</span>
+          <select id="languageSelect" aria-label="言語">
+            <option value="ja" data-ja="日本語" data-en="Japanese">日本語</option>
+            <option value="en" data-ja="英語" data-en="English">English</option>
+          </select>
+        </label>
+        <label class="header-setting">
+          <span data-ja="文字" data-en="Text">文字</span>
+          <select id="fontSizeSelect" aria-label="文字サイズ">
+            <option value="normal" data-ja="標準" data-en="Standard">標準</option>
+            <option value="large" data-ja="大きい" data-en="Large">大きい</option>
+            <option value="x-large" data-ja="特大" data-en="Extra large">特大</option>
+          </select>
+        </label>
+        <button class="menu-button" type="button" aria-label="メニューを開く" aria-expanded="false" aria-controls="mainNav">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+      </div>
       <nav class="main-nav" id="mainNav">
-        <a href="/">ホーム</a>
-        <a href="/shelter_search">避難所検索</a>
-        <a href="/shelter_register">避難所登録</a>
-        <a href="/board">指示・発信ボード</a>
+        <a href="/" data-ja="ホーム" data-en="Home">ホーム</a>
+        <a href="/shelter_search" data-ja="避難所検索" data-en="Shelter search">避難所検索</a>
+        <a href="/shelter_register" data-ja="避難所登録" data-en="Register shelter">避難所登録</a>
+        <a href="/board" data-ja="指示・発信ボード" data-en="Message board">指示・発信ボード</a>
         {% if session.logged_in %}
-          <span>ログイン中{% if session.username %}（{{ session.username }}）{% endif %}</span>
-          <a href="/logout">ログアウト</a>
+          <span data-ja="ログイン中{% if session.username %}（{{ session.username }}）{% endif %}" data-en="Logged in{% if session.username %} ({{ session.username }}){% endif %}">ログイン中{% if session.username %}（{{ session.username }}）{% endif %}</span>
+          <a href="/logout" data-ja="ログアウト" data-en="Log out">ログアウト</a>
         {% else %}
-          <a href="/login">ログイン</a>
+          <a href="/login" data-ja="ログイン" data-en="Log in">ログイン</a>
         {% endif %}
       </nav>
     </div>
@@ -231,6 +279,52 @@
   <script>
     const menuButton = document.querySelector('.menu-button');
     const mainNav = document.querySelector('#mainNav');
+    const languageSelect = document.querySelector('#languageSelect');
+    const fontSizeSelect = document.querySelector('#fontSizeSelect');
+
+    function applyLanguage(language) {
+      window.bousaiLanguage = language;
+      document.documentElement.lang = language;
+      document.querySelectorAll('[data-ja][data-en]').forEach((element) => {
+        element.textContent = element.dataset[language];
+      });
+      document.querySelectorAll('[data-placeholder-ja][data-placeholder-en]').forEach((element) => {
+        element.placeholder = element.dataset[`placeholder${language === 'ja' ? 'Ja' : 'En'}`];
+      });
+      document.querySelectorAll('[data-shelter-name]').forEach((element) => {
+        element.textContent = window.translateShelterName(element.dataset.shelterName);
+      });
+      document.querySelectorAll('[data-shelter-address]').forEach((element) => {
+        element.textContent = window.translateShelterAddress(element.dataset.shelterAddress);
+      });
+      languageSelect.value = language;
+      localStorage.setItem('bousai-language', language);
+      window.dispatchEvent(new Event('languagechange'));
+    }
+
+    const shelterNameTranslations = {
+      '御所見小学校': 'Goshomi Elementary School',
+      '片瀬小学校': 'Katase Elementary School',
+      '鵠洋小学校': 'Koyo Elementary School',
+      '南町市民センター': 'Minamicho Civic Center',
+      '北町コミュニティホール': 'Kitamachi Community Hall',
+      '中央公民館': 'Central Community Center',
+      '東町体育館': 'Higashimachi Gymnasium',
+      'かきく': 'Kakiku Shelter'
+    };
+    window.translateShelterName = (name) => window.bousaiLanguage === 'en' ? (shelterNameTranslations[name] || name) : name;
+    window.translateShelterAddress = (address) => window.bousaiLanguage === 'en' ? address.replace(/^青森市/, 'Aomori City ').replace(/中央|東町|西町|南町|北町/g, (area) => ({中央: 'Chuo', 東町: 'Higashimachi', 西町: 'Nishimachi', 南町: 'Minamicho', 北町: 'Kitamachi'})[area]) : address;
+
+    function applyFontSize(size) {
+      document.body.dataset.fontSize = size;
+      fontSizeSelect.value = size;
+      localStorage.setItem('bousai-font-size', size);
+    }
+
+    applyLanguage(localStorage.getItem('bousai-language') || 'ja');
+    applyFontSize(localStorage.getItem('bousai-font-size') || 'normal');
+    languageSelect.addEventListener('change', (event) => applyLanguage(event.target.value));
+    fontSizeSelect.addEventListener('change', (event) => applyFontSize(event.target.value));
     menuButton.addEventListener('click', () => {
       const isOpen = mainNav.classList.toggle('is-open');
       menuButton.setAttribute('aria-expanded', isOpen);

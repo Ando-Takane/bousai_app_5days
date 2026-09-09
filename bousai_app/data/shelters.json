@@ -1,34 +1,90 @@
 [
   {
     "id": 1,
-    "name": "御所見小学校"
+    "name": "御所見小学校",
+    "address": "青森市中央1-1",
+    "congestion": "空き",
+    "congestion_updated_at": "2026年09月09日 09:00",
+    "capacity": 200,
+    "latitude": 40.8246,
+    "longitude": 140.7406,
+    "supports": ["elderly", "children"]
   },
   {
     "id": 2,
-    "name": "片瀬小学校"
+    "name": "片瀬小学校",
+    "address": "青森市東町2-3",
+    "congestion": "やや混雑",
+    "congestion_updated_at": "2026年09月09日 09:05",
+    "capacity": 100,
+    "latitude": 40.8271,
+    "longitude": 140.7480,
+    "supports": ["foreigners", "care"]
   },
   {
     "id": 5,
-    "name": "鵠洋小学校"
+    "name": "鵠洋小学校",
+    "address": "青森市西町3-4",
+    "congestion": "混雑",
+    "congestion_updated_at": "2026年09月09日 09:10",
+    "capacity": 200,
+    "latitude": 40.8218,
+    "longitude": 140.7325,
+    "supports": ["pets", "children"]
   },
   {
     "id": 6,
-    "name": "あいう"
+    "name": "南町市民センター",
+    "address": "青森市南町4-5",
+    "congestion": "空き",
+    "congestion_updated_at": "2026年09月09日 09:15",
+    "capacity": 100,
+    "latitude": 40.8178,
+    "longitude": 140.7421,
+    "supports": ["elderly", "care", "pets"]
   },
   {
     "id": 7,
-    "name": "あいう"
+    "name": "北町コミュニティホール",
+    "address": "青森市北町5-6",
+    "congestion": "やや混雑",
+    "congestion_updated_at": "2026年09月09日 09:20",
+    "capacity": 200,
+    "latitude": 40.8332,
+    "longitude": 140.7392,
+    "supports": ["children", "foreigners"]
   },
   {
     "id": 8,
-    "name": "あいう"
+    "name": "中央公民館",
+    "address": "青森市中央6-7",
+    "congestion": "空き",
+    "congestion_updated_at": "2026年09月09日 09:25",
+    "capacity": 100,
+    "latitude": 40.8231,
+    "longitude": 140.7450,
+    "supports": ["elderly", "foreigners", "care"]
   },
   {
     "id": 9,
-    "name": "あいう"
+    "name": "東町体育館",
+    "address": "青森市東町7-8",
+    "congestion": "混雑",
+    "congestion_updated_at": "2026年09月09日 09:30",
+    "capacity": 200,
+    "latitude": 40.8295,
+    "longitude": 140.7531,
+    "supports": ["pets", "children", "foreigners"]
   },
   {
     "id": 10,
-    "name": "かきく"
+    "name": "かきく",
+    "address": "青森市西町8-9",
+    "congestion": "空き",
+    "congestion_updated_at": "2026年09月09日 09:35",
+    "capacity": 100,
+    "latitude": 40.8199,
+    "longitude": 140.7298,
+    "supports": ["care", "pets"]
   }
 ]

@@ -3,8 +3,8 @@
 {% block title %}管理者ログイン{% endblock %}
 
 {% block content %}
-<h2>管理者ログイン</h2>
-<p>指示ボード・避難所登録の利用には管理者権限が必要です。</p>
+<h2 data-ja="管理者ログイン" data-en="Administrator login">管理者ログイン</h2>
+<p data-ja="指示ボード・避難所登録の利用には管理者権限が必要です。" data-en="Administrator access is required for the message board and shelter registration.">指示ボード・避難所登録の利用には管理者権限が必要です。</p>
 
 {% if error %}
   <p>{{ message }}</p>
@@ -17,11 +17,11 @@
   {% endif %}
 
   <p>
-    <label for="password">パスワード（「123」と入力してください）</label><br>
+    <label for="password" data-ja="パスワード（「123」と入力してください）" data-en="Password (enter 123)">パスワード（「123」と入力してください）</label><br>
     <input type="password" id="password" name="password" required>
   </p>
 
-  <p><button type="submit">ログイン</button></p>
+  <p><button type="submit" data-ja="ログイン" data-en="Log in">ログイン</button></p>
 </form>
 
 {% endblock %}

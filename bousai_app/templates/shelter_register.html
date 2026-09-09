@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>避難所登録</h2>
-<p>新しい避難所情報を登録します。</p>
+<h2 data-ja="避難所登録" data-en="Register a shelter">避難所登録</h2>
+<p data-ja="新しい避難所情報を登録します。" data-en="Register new shelter information.">新しい避難所情報を登録します。</p>
 
 <!-- 成功・エラーメッセージ表示 -->
 {% if success %}
   <p>{{ message }}</p>
-  <p>登録された避難所名: {{ registered_name }}</p>
+  <p data-ja="登録された避難所名: {{ registered_name }}" data-en="Registered shelter: {{ registered_name }}">登録された避難所名: {{ registered_name }}</p>
 {% endif %}
 
 {% if error %}
@@ -16,9 +16,31 @@
 
 <form method="POST">
   <p>
-    <label for="name">避難所名（必須）</label><br>
+    <label for="name" data-ja="避難所名（必須）" data-en="Shelter name (required)">避難所名（必須）</label><br>
     <input type="text" id="name" name="name">
   </p>
-  <p><button type="submit">登録</button></p>
+  <fieldset>
+    <legend data-ja="対応している項目（任意）" data-en="Available support (optional)">対応している項目（任意）</legend>
+    {% for requirement, label in requirement_labels.items() %}
+      <label><input type="checkbox" name="{{ requirement }}" value="1"> <span data-ja="{{ label }}" data-en="{% if requirement == 'elderly' %}Elderly people{% elif requirement == 'children' %}Families with children{% elif requirement == 'foreigners' %}Foreign visitors{% elif requirement == 'care' %}People needing care{% else %}Pets{% endif %}">{{ label }}</span></label><br>
+    {% endfor %}
+  </fieldset>
+  <p>
+    <label for="address" data-ja="住所" data-en="Address">住所</label><br>
+    <input type="text" id="address" name="address" placeholder="例: 青森市中央1-1" data-placeholder-ja="例: 青森市中央1-1" data-placeholder-en="Example: Aomori City Chuo 1-1">
+  </p>
+  <p>
+    <label for="congestion" data-ja="混雑状況" data-en="Crowding status">混雑状況</label><br>
+    <select id="congestion" name="congestion">
+      {% for option in congestion_options %}<option value="{{ option }}">{{ option }}</option>{% endfor %}
+    </select>
+  </p>
+  <p>
+    <label for="capacity" data-ja="収容人数" data-en="Capacity">収容人数</label><br>
+    <select id="capacity" name="capacity">
+      {% for option in capacity_options %}<option value="{{ option }}">{{ option }}人</option>{% endfor %}
+    </select>
+  </p>
+  <p><button type="submit" data-ja="登録" data-en="Register">登録</button></p>
 </form>
 {% endblock %}
