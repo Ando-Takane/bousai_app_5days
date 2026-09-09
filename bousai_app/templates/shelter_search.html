@@ -1,8 +1,34 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>避難所検索</h2>
-<p>登録されている避難所を確認できます。</p>
+<section class="search-panel">
+	<div class="search-title-row">
+		<div>
+			<p class="eyebrow">SHELTER SEARCH</p>
+			<h1>避難所を探す</h1>
+			<p class="search-lead">場所と必要なサポートを選ぶと、条件に合う避難所を表示します。</p>
+		</div>
+		<span class="search-mark" aria-hidden="true">⌕</span>
+	</div>
 
-<p><a href="/all_shelters">全施設一覧</a></p>
+	<form action="/search_results" method="get" class="search-form">
+		<label for="location">場所</label>
+		<input type="search" id="location" name="location" placeholder="地区名・住所を入力" autocomplete="address-level2">
+
+		<fieldset>
+			<legend>必要なサポート</legend>
+			<div class="requirement-grid">
+				<label><input type="checkbox" name="elderly" value="1"> <span>高齢者</span></label>
+				<label><input type="checkbox" name="children" value="1"> <span>子供連れ</span></label>
+				<label><input type="checkbox" name="foreigners" value="1"> <span>外国人</span></label>
+				<label><input type="checkbox" name="care" value="1"> <span>要介護者</span></label>
+				<label><input type="checkbox" name="pets" value="1"> <span>ペット</span></label>
+			</div>
+		</fieldset>
+
+		<button type="submit" class="search-submit">条件に合う避難所を検索</button>
+	</form>
+
+	<a class="all-shelters-link" href="/all_shelters">条件を指定せず全施設を見る</a>
+</section>
 {% endblock %}

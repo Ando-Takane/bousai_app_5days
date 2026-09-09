@@ -148,6 +148,42 @@ def filter_shelters(district=None):
     """district 指定があれば一致する避難所のみ、なければ全件を返す"""
     return [s for s in shelters if not district or s.get('district') == district]
 
+SHELTER_REQUIREMENTS = {
+    'elderly': '高齢者',
+    'children': '子供連れ',
+    'foreigners': '外国人',
+    'care': '要介護者',
+    'pets': 'ペット'
+}
+
+def shelter_supports(shelter, requirement):
+    """避難所が検索条件に対応しているかを確認する"""
+    supports = shelter.get('supports', [])
+    if isinstance(supports, dict):
+        return bool(supports.get(requirement))
+    if isinstance(supports, list):
+        return requirement in supports or SHELTER_REQUIREMENTS[requirement] in supports
+    return bool(shelter.get(requirement, False))
+
+def search_shelters(location, requirements):
+    """場所と利用条件に一致する避難所を返す"""
+    location = location.strip().lower()
+    results = []
+    for shelter in shelters:
+        shelter_location = ' '.join(
+            str(shelter.get(field, ''))
+            for field in ('location', 'district', 'address')
+        ).lower()
+        if location and location not in shelter_location:
+            continue
+        if all(shelter_supports(shelter, requirement) for requirement in requirements):
+            results.append(shelter)
+    return results
+
+@app.context_processor
+def inject_shelter_helpers():
+    return {'shelter_supports': shelter_supports}
+
 
 def parse_area_warnings(warning_data):
     """気象庁の新形式JSONから対象市区町村の発表・継続中の情報を抽出する"""
@@ -315,7 +351,13 @@ def shelter_search():
 # 全施設一覧ページ
 @app.route('/all_shelters')
 def all_shelters():
-    return render_template('search_results.html', results=shelters)
+    return render_template(
+        'search_results.html',
+        results=shelters,
+        location='',
+        selected_requirements=[],
+        requirement_labels=SHELTER_REQUIREMENTS
+    )
 
 
 # 指示ボード：住民向けの指示を一覧で確認する
@@ -328,8 +370,19 @@ def board():
 # 検索結果ページ：templates/search_results.html を返す
 @app.route('/search_results')
 def search_results():
-    results = filter_shelters(request.args.get('district'))
-    return render_template('search_results.html', results=results)
+    location = request.args.get('location', '')
+    selected_requirements = [
+        requirement for requirement in SHELTER_REQUIREMENTS
+        if request.args.get(requirement) == '1'
+    ]
+    results = search_shelters(location, selected_requirements)
+    return render_template(
+        'search_results.html',
+        results=results,
+        location=location,
+        selected_requirements=selected_requirements,
+        requirement_labels=SHELTER_REQUIREMENTS
+    )
 
 # JSON API：/shelters?district=地区名
 @app.route('/shelters', methods=['GET'])

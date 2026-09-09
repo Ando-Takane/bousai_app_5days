@@ -140,6 +140,48 @@
     .weather-meta:last-child { margin-bottom: 0; }
     .status-icon { width: 18px; height: 18px; vertical-align: -4px; margin-right: 5px; }
 
+    .search-panel, .shelter-result, .empty-results {
+      border: 1px solid #edf1f7;
+      border-radius: 17px;
+      background: #fff;
+      box-shadow: 0 6px 23px rgba(56, 76, 107, .08);
+    }
+
+    .search-panel { padding: 34px 38px 30px; }
+    .search-title-row, .results-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+    .eyebrow { margin: 0 0 7px; color: #6a8bc5; font-size: 12px; font-weight: 800; letter-spacing: .14em; }
+    .search-panel h1, .results-header h1 { margin: 0; color: #285aa8; font-size: 29px; }
+    .search-lead, .result-count { margin: 11px 0 0; color: #69778a; }
+    .search-mark, .empty-icon { color: #285aa8; font-size: 42px; font-weight: 300; line-height: 1; }
+    .search-form { margin-top: 32px; }
+    .search-form > label, .search-form legend { display: block; margin-bottom: 9px; color: #37475c; font-weight: 800; }
+    .search-form input[type="search"] { width: 100%; padding: 14px 16px; border: 1px solid #dce3ed; border-radius: 9px; color: #3f4b5d; font: inherit; outline: none; }
+    .search-form input[type="search"]:focus { border-color: #5c87ce; box-shadow: 0 0 0 3px rgba(40, 91, 171, .12); }
+    .search-form fieldset { margin: 27px 0 0; padding: 0; border: 0; }
+    .requirement-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+    .requirement-grid label { display: flex; align-items: center; gap: 8px; min-height: 49px; padding: 0 12px; border: 1px solid #e1e7ef; border-radius: 9px; color: #4a596b; cursor: pointer; }
+    .requirement-grid label:has(input:checked) { border-color: #5c87ce; background: #f0f5ff; color: #285aa8; }
+    .requirement-grid input { accent-color: #285aa8; }
+    .search-submit { display: inline-block; margin-top: 28px; padding: 13px 24px; border: 0; border-radius: 8px; background: #285bab; color: #fff; font: inherit; font-weight: 800; text-decoration: none; cursor: pointer; }
+    .search-submit:hover { background: #214d99; }
+    .all-shelters-link, .edit-search { display: inline-block; margin-top: 21px; color: #285aa8; font-size: 14px; font-weight: 700; text-decoration: none; }
+    .result-count strong { color: #285aa8; font-size: 24px; }
+    .edit-search { margin-top: 19px; padding: 10px 14px; border: 1px solid #cbd9ef; border-radius: 8px; }
+    .applied-filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 23px 0 15px; }
+    .filter-chip, .support-tag { display: inline-block; padding: 5px 10px; border-radius: 999px; background: #edf4ff; color: #285aa8; font-size: 13px; font-weight: 700; }
+    .result-list { display: grid; gap: 13px; margin-top: 28px; }
+    .shelter-result { display: flex; align-items: center; gap: 17px; padding: 20px 23px; }
+    .shelter-result-icon { display: grid; place-items: center; width: 43px; height: 43px; flex: 0 0 auto; border-radius: 50%; background: #eaf2ff; color: #285aa8; font-size: 28px; }
+    .shelter-result-body { min-width: 0; flex: 1; }
+    .shelter-result h2 { margin: 0; color: #34445a; font-size: 19px; }
+    .shelter-location { margin: 7px 0 11px; color: #768396; font-size: 14px; }
+    .support-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .result-arrow { color: #91a0b3; font-size: 28px; }
+    .empty-results { margin-top: 28px; padding: 45px 24px; text-align: center; }
+    .empty-results .empty-icon { font-size: 48px; }
+    .empty-results h2 { margin: 15px 0 8px; color: #34445a; font-size: 20px; }
+    .empty-results p { margin: 0; color: #748194; }
+
     @media (max-width: 600px) {
       .app-header { height: 62px; }
       .header-inner { width: calc(100% - 28px); }
@@ -150,6 +192,14 @@
       .card-heading { align-items: flex-start; font-size: 18px; }
       .refresh-label { font-size: 12px; }
       #shelterMap { height: 280px !important; }
+      .search-panel { padding: 24px 17px; }
+      .search-panel h1, .results-header h1 { font-size: 24px; }
+      .requirement-grid { grid-template-columns: repeat(2, 1fr); }
+      .requirement-grid label:last-child { grid-column: 1 / -1; }
+      .shelter-result { padding: 16px 14px; gap: 11px; }
+      .shelter-result h2 { font-size: 16px; }
+      .shelter-result-icon { width: 36px; height: 36px; font-size: 23px; }
+      .results-header { align-items: flex-end; }
     }
   </style>
 </head>

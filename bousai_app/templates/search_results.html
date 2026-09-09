@@ -1,20 +1,46 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>検索結果</h2>
+<section class="results-header">
+  <div>
+    <p class="eyebrow">SEARCH RESULTS</p>
+    <h1>検索結果</h1>
+    <p class="result-count"><strong>{{ results|length }}</strong> 件の避難所が見つかりました</p>
+  </div>
+  <a class="edit-search" href="/shelter_search">条件を変更</a>
+</section>
 
-{% if results %}
-  <ul>
-    {% for shelter in results %}
-    <li>{{ shelter.name }}</li>
-    {% endfor %}
-  </ul>
-{% else %}
-  <p>該当する避難所が見つかりませんでした</p>
+{% if location or selected_requirements %}
+<div class="applied-filters">
+  {% if location %}<span class="filter-chip">場所: {{ location }}</span>{% endif %}
+  {% for requirement in selected_requirements %}<span class="filter-chip">{{ requirement_labels[requirement] }}</span>{% endfor %}
+</div>
 {% endif %}
 
-<p>
-  <a href="/shelter_search">検索画面に戻る</a> |
-  <a href="/">トップページへ戻る</a>
-</p>
+{% if results %}
+  <div class="result-list">
+    {% for shelter in results %}
+    <article class="shelter-result">
+      <div class="shelter-result-icon" aria-hidden="true">⌖</div>
+      <div class="shelter-result-body">
+        <h2>{{ shelter.name }}</h2>
+        <p class="shelter-location">{{ shelter.location or shelter.address or shelter.district or '場所情報は登録されていません' }}</p>
+        <div class="support-tags">
+          {% for requirement, label in requirement_labels.items() %}
+            {% if shelter_supports(shelter, requirement) %}<span class="support-tag">{{ label }}</span>{% endif %}
+          {% endfor %}
+        </div>
+      </div>
+      <span class="result-arrow" aria-hidden="true">›</span>
+    </article>
+    {% endfor %}
+  </div>
+{% else %}
+  <section class="empty-results">
+    <div class="empty-icon" aria-hidden="true">⌕</div>
+    <h2>条件に合う避難所が見つかりませんでした</h2>
+    <p>場所を広げるか、必要なサポートの条件を減らして再検索してください。</p>
+    <a class="search-submit" href="/shelter_search">検索画面に戻る</a>
+  </section>
+{% endif %}
 {% endblock %}
