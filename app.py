@@ -159,6 +159,10 @@ SHELTER_REQUIREMENTS = {
 CONGESTION_OPTIONS = ('混雑', 'やや混雑', '空き')
 CAPACITY_OPTIONS = (100, 200)
 CONGESTION_ORDER = {'空き': 0, 'やや混雑': 1, '混雑': 2}
+FACILITY_TYPE_OPTIONS = (
+    '指定避難所', '一時避難所', '福祉避難所', '防災倉庫', '物資集積所', 'その他'
+)
+DISASTER_TYPE_OPTIONS = ('津波', '地震', '洪水')
 
 def sort_shelters_by_congestion(items):
     """避難所を空き、やや混雑、混雑の順に並べる"""
@@ -333,15 +337,24 @@ def logout():
 @app.route('/shelter_register', methods=['GET', 'POST'])
 @login_required
 def shelter_register():
+    template_data = {
+        'requirement_labels': SHELTER_REQUIREMENTS,
+        'facility_type_options': FACILITY_TYPE_OPTIONS,
+        'disaster_type_options': DISASTER_TYPE_OPTIONS,
+        'congestion_options': CONGESTION_OPTIONS,
+        'capacity_options': CAPACITY_OPTIONS
+    }
+
     if request.method == 'POST':
         name = request.form.get('name', '').strip()
-        if not name:
-            return render_template(
-                'shelter_register.html',
-                error=True,
-                message='避難所名を入力してください。',
-                requirement_labels=SHELTER_REQUIREMENTS
-            )
+        name_roman = request.form.get('name_roman', '').strip()
+        address = request.form.get('address', '').strip()
+        if not name or not name_roman or not address:
+            template_data.update(error=True, message='施設名、施設名（ローマ字）、施設住所を入力してください。')
+            return render_template('shelter_register.html', **template_data)
+        if request.form.get('confirm') != '1':
+            template_data.update(error=True, message='内容を確認したことにチェックしてください。')
+            return render_template('shelter_register.html', **template_data)
 
         next_id = max((shelter.get('id', 0) for shelter in shelters), default=0) + 1
         selected_supports = [
@@ -355,34 +368,47 @@ def shelter_register():
             capacity = int(request.form.get('capacity', '100'))
         except ValueError:
             capacity = 100
-        if capacity not in CAPACITY_OPTIONS:
+        if capacity < 0:
             capacity = 100
+        selected_disaster_types = request.form.getlist('disaster_type')
+        selected_disaster_types = [
+            disaster_type for disaster_type in selected_disaster_types
+            if disaster_type in DISASTER_TYPE_OPTIONS
+        ]
+        if not selected_disaster_types:
+            template_data.update(error=True, message='災害対応区分を1つ以上選択してください。')
+            return render_template('shelter_register.html', **template_data)
+
+        try:
+            accepted_count = max(0, int(request.form.get('accepted_count', '0') or 0))
+        except ValueError:
+            accepted_count = 0
+        try:
+            stock_count = max(0, int(request.form.get('stock_count', '0') or 0))
+        except ValueError:
+            stock_count = 0
+
         shelters.append({
             'id': next_id,
             'name': name,
+            'name_roman': name_roman,
+            'facility_type': request.form.get('facility_type', '').strip(),
             'supports': selected_supports,
-            'address': request.form.get('address', '').strip() or '住所情報は未登録です',
+            'accepted_count': accepted_count,
+            'check_time': request.form.get('check_time', '').strip(),
+            'stock_count': stock_count,
+            'address': address,
+            'address_english': request.form.get('address_english', '').strip(),
+            'disaster_type': selected_disaster_types,
             'congestion': congestion,
             'congestion_updated_at': get_japan_time(),
             'capacity': capacity
         })
         save_shelters()
-        return render_template(
-            'shelter_register.html',
-            success=True,
-            message=f'「{name}」を登録しました。',
-            registered_name=name,
-            requirement_labels=SHELTER_REQUIREMENTS,
-            congestion_options=CONGESTION_OPTIONS,
-            capacity_options=CAPACITY_OPTIONS
-        )
+        template_data.update(success=True, message=f'「{name}」を登録しました。', registered_name=name)
+        return render_template('shelter_register.html', **template_data)
 
-    return render_template(
-        'shelter_register.html',
-        requirement_labels=SHELTER_REQUIREMENTS,
-        congestion_options=CONGESTION_OPTIONS,
-        capacity_options=CAPACITY_OPTIONS
-    )
+    return render_template('shelter_register.html', **template_data)
 
 # 避難所検索ページ
 @app.route('/shelter_search')

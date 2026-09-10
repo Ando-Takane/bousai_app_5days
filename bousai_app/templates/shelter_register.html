@@ -1,46 +1,189 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2 data-ja="避難所登録" data-en="Register a shelter">避難所登録</h2>
-<p data-ja="新しい避難所情報を登録します。" data-en="Register new shelter information.">新しい避難所情報を登録します。</p>
+<style>
+  .page-shell { width: min(1180px, calc(100% - 40px)); }
+  .register-page {
+    width: min(1120px, calc(100% - 40px));
+    margin: 26px auto 70px;
+  }
+  .register-card {
+    padding: 28px 26px 30px;
+    border: 1px solid #edf1f7;
+    border-radius: 17px;
+    background: rgba(255, 255, 255, .96);
+    box-shadow: 0 8px 25px rgba(56, 76, 107, .1);
+  }
+  .register-heading {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0 0 24px;
+    color: #285aa8;
+    font-size: 21px;
+  }
+  .register-heading svg { width: 20px; height: 20px; flex: 0 0 auto; }
+  .register-message { margin: 0 0 18px; padding: 11px 14px; border-radius: 8px; }
+  .register-message.success { background: #e8f7ed; color: #217640; }
+  .register-message.error { background: #fff0ee; color: #bd3c35; }
+  .register-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr .88fr;
+    column-gap: 25px;
+    align-items: start;
+  }
+  .register-column { display: grid; gap: 15px; }
+  .register-field { min-width: 0; }
+  .register-field label, .register-field legend {
+    display: block;
+    margin: 0 0 6px;
+    color: #27384f;
+    font-size: 12px;
+    font-weight: 800;
+  }
+  .required { margin-left: 4px; color: #d64b4b; font-size: 10px; }
+  .register-field input, .register-field select, .register-field textarea {
+    width: 100%;
+    min-height: 34px;
+    padding: 8px 11px;
+    border: 1px solid #dce1e8;
+    border-radius: 6px;
+    background: #fff;
+    color: #3f4b5d;
+    font: inherit;
+    font-size: 12px;
+    outline: none;
+  }
+  .register-field textarea { min-height: 68px; resize: vertical; }
+  .register-field input:focus, .register-field select:focus, .register-field textarea:focus {
+    border-color: #5c87ce;
+    box-shadow: 0 0 0 3px rgba(40, 91, 171, .12);
+  }
+  .register-field input::placeholder, .register-field textarea::placeholder { color: #aab4c2; }
+  .check-time-row { display: flex; gap: 6px; align-items: stretch; }
+  .check-time-row input { min-width: 0; }
+  .now-button {
+    flex: 0 0 auto;
+    padding: 0 10px;
+    border: 1px solid #dce1e8;
+    border-radius: 6px;
+    background: #fff;
+    color: #285aa8;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .now-button:hover { background: #f0f5ff; }
+  .field-help { margin: 5px 0 0; color: #8a96a6; font-size: 10px; }
+  .register-checks { padding: 0; border: 0; }
+  .checkbox-list { display: grid; gap: 7px; }
+  .checkbox-label, .confirm-label { display: flex; align-items: center; gap: 8px; color: #35445a; font-size: 12px; }
+  .checkbox-label input, .confirm-label input { width: 13px; min-height: 13px; accent-color: #285bab; }
+  .confirm-area { padding: 12px 13px; border-radius: 8px; background: #eef3ff; }
+  .confirm-area label { margin: 0; }
+  .register-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 2px; border-top: 1px solid #edf1f7; }
+  .register-note { margin: 0; color: #68778b; font-size: 10px; line-height: 1.4; }
+  .register-submit { min-width: 112px; padding: 10px 18px; border: 0; border-radius: 8px; background: #285bab; color: #fff; font: inherit; font-size: 13px; font-weight: 800; box-shadow: 0 4px 9px rgba(40, 91, 171, .22); cursor: pointer; }
+  .register-submit:hover { background: #214d99; }
+  @media (max-width: 850px) {
+    .register-form { grid-template-columns: 1fr 1fr; }
+    .register-column:last-child { grid-column: 1 / -1; grid-template-columns: 1fr 1fr; align-items: start; }
+    .register-actions { grid-column: 1 / -1; }
+  }
+  @media (max-width: 600px) {
+    .page-shell { width: calc(100% - 24px); }
+    .register-page { width: calc(100% - 24px); margin-top: 18px; }
+    .register-card { padding: 21px 15px 23px; border-radius: 13px; }
+    .register-heading { margin-bottom: 20px; font-size: 19px; }
+    .register-form, .register-column:last-child { grid-template-columns: 1fr; }
+    .register-column:last-child, .register-actions { grid-column: auto; }
+    .register-submit { width: 100%; }
+  }
+</style>
 
-<!-- 成功・エラーメッセージ表示 -->
-{% if success %}
-  <p>{{ message }}</p>
-  <p data-ja="登録された避難所名: {{ registered_name }}" data-en="Registered shelter: {{ registered_name }}">登録された避難所名: {{ registered_name }}</p>
-{% endif %}
+<section class="register-page" aria-labelledby="register-heading">
+  <div class="register-card">
+    <h1 class="register-heading" id="register-heading">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 20V8l8-5 8 5v12M3 20h18M8 20v-6h8v6M9 9h.01M15 9h.01" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span data-ja="避難所情報登録" data-en="Register shelter information">避難所情報登録</span>
+    </h1>
+    {% if success %}<p class="register-message success" role="alert">{{ message }}</p>{% endif %}
+    {% if error %}<p class="register-message error" role="alert">{{ message }}</p>{% endif %}
 
-{% if error %}
-  <p>{{ message }}</p>
-{% endif %}
+    <form method="POST" class="register-form">
+      <div class="register-column">
+        <div class="register-field">
+          <label for="facility_type" data-ja="施設区分" data-en="Facility type">施設区分</label>
+          <select id="facility_type" name="facility_type">
+            <option value="" data-ja="施設区分を選択" data-en="Select facility type">施設区分を選択</option>
+            {% for option in facility_type_options %}<option value="{{ option }}" {% if request.form.get('facility_type') == option %}selected{% endif %}>{{ option }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="register-field">
+          <label for="name"><span data-ja="施設名" data-en="Facility name">施設名</span><span class="required">必須</span></label>
+          <input type="text" id="name" name="name" value="{{ request.form.get('name', '') }}" placeholder="施設名を入力" data-placeholder-ja="施設名を入力" data-placeholder-en="Enter facility name" required>
+        </div>
+        <div class="register-field">
+          <label for="name_roman"><span data-ja="施設名（ローマ字）" data-en="Facility name (Roman letters)">施設名（ローマ字）</span><span class="required">必須</span></label>
+          <input type="text" id="name_roman" name="name_roman" value="{{ request.form.get('name_roman', '') }}" placeholder="英語表記" data-placeholder-ja="英語表記" data-placeholder-en="Roman-letter name" required>
+        </div>
+        <div class="register-field">
+          <label for="accepted_count" data-ja="現在の受入れ人数" data-en="Current accepted people">現在の受入れ人数</label>
+          <input type="number" id="accepted_count" name="accepted_count" min="0" value="{{ request.form.get('accepted_count', '') }}" placeholder="自由入力" data-placeholder-ja="自由入力" data-placeholder-en="Enter number">
+        </div>
+        <div class="register-field">
+          <label for="check_time" data-ja="情報確認日時" data-en="Information checked at">情報確認日時</label>
+          <div class="check-time-row">
+            <input type="datetime-local" id="check_time" name="check_time" value="{{ request.form.get('check_time', '') }}">
+            <button class="now-button" type="button" id="setCurrentTime" data-ja="現在時刻" data-en="Now">現在時刻</button>
+          </div>
+        </div>
+      </div>
 
-<form method="POST">
-  <p>
-    <label for="name" data-ja="避難所名（必須）" data-en="Shelter name (required)">避難所名（必須）</label><br>
-    <input type="text" id="name" name="name">
-  </p>
-  <fieldset>
-    <legend data-ja="対応している項目（任意）" data-en="Available support (optional)">対応している項目（任意）</legend>
-    {% for requirement, label in requirement_labels.items() %}
-      <label><input type="checkbox" name="{{ requirement }}" value="1"> <span data-ja="{{ label }}" data-en="{% if requirement == 'elderly' %}Elderly people{% elif requirement == 'children' %}Families with children{% elif requirement == 'foreigners' %}Foreign visitors{% elif requirement == 'care' %}People needing care{% else %}Pets{% endif %}">{{ label }}</span></label><br>
-    {% endfor %}
-  </fieldset>
-  <p>
-    <label for="address" data-ja="住所" data-en="Address">住所</label><br>
-    <input type="text" id="address" name="address" placeholder="例: 青森市中央1-1" data-placeholder-ja="例: 青森市中央1-1" data-placeholder-en="Example: Aomori City Chuo 1-1">
-  </p>
-  <p>
-    <label for="congestion" data-ja="混雑状況" data-en="Crowding status">混雑状況</label><br>
-    <select id="congestion" name="congestion">
-      {% for option in congestion_options %}<option value="{{ option }}">{{ option }}</option>{% endfor %}
-    </select>
-  </p>
-  <p>
-    <label for="capacity" data-ja="収容人数" data-en="Capacity">収容人数</label><br>
-    <select id="capacity" name="capacity">
-      {% for option in capacity_options %}<option value="{{ option }}">{{ option }}人</option>{% endfor %}
-    </select>
-  </p>
-  <p><button type="submit" data-ja="登録" data-en="Register">登録</button></p>
-</form>
+      <div class="register-column">
+        <div class="register-field">
+          <label for="capacity"><span data-ja="避難可能人数（収容）" data-en="Evacuation capacity">避難可能人数（収容）</span><span class="required">必須</span></label>
+          <input type="number" id="capacity" name="capacity" min="0" value="{{ request.form.get('capacity', '') }}" placeholder="自由入力" data-placeholder-ja="自由入力" data-placeholder-en="Enter capacity" required>
+        </div>
+        <div class="register-field">
+          <label for="stock_count" data-ja="備蓄食料人数" data-en="Stocked food capacity">備蓄食料人数</label>
+          <input type="number" id="stock_count" name="stock_count" min="0" value="{{ request.form.get('stock_count', '') }}" placeholder="自由入力" data-placeholder-ja="自由入力" data-placeholder-en="Enter number">
+        </div>
+        <div class="register-field">
+          <label for="address"><span data-ja="施設住所" data-en="Facility address">施設住所</span><span class="required">必須</span></label>
+          <textarea id="address" name="address" placeholder="住所を入力" data-placeholder-ja="住所を入力" data-placeholder-en="Enter address" required>{{ request.form.get('address', '') }}</textarea>
+          <p class="field-help" data-ja="地図表示にも使用します" data-en="Used for map display">地図表示にも使用します</p>
+        </div>
+        <div class="register-field">
+          <label for="address_english" data-ja="施設住所（英語表記）" data-en="Facility address (English)">施設住所（英語表記）</label>
+          <input type="text" id="address_english" name="address_english" value="{{ request.form.get('address_english', '') }}" placeholder="英語表記" data-placeholder-ja="英語表記" data-placeholder-en="English address">
+        </div>
+      </div>
+
+      <div class="register-column">
+        <fieldset class="register-field register-checks">
+          <legend><span data-ja="災害対応区分" data-en="Disaster types">災害対応区分</span><span class="required">必須</span></legend>
+          <div class="checkbox-list">
+            {% for option in disaster_type_options %}<label class="checkbox-label"><input type="checkbox" name="disaster_type" value="{{ option }}" {% if option in request.form.getlist('disaster_type') %}checked{% endif %}><span>{{ option }}</span></label>{% endfor %}
+          </div>
+        </fieldset>
+        <div class="confirm-area">
+          <label class="confirm-label"><input type="checkbox" name="confirm" value="1" {% if request.form.get('confirm') == '1' %}checked{% endif %} required><span data-ja="内容を確認しました" data-en="I have confirmed the information">内容を確認しました</span></label>
+        </div>
+        <div class="register-actions">
+          <p class="register-note" data-ja="必須項目を入力して登録してください" data-en="Complete the required fields to register.">必須項目を入力して登録してください</p>
+          <button class="register-submit" type="submit" data-ja="登録する" data-en="Register">登録する</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>
+
+<script>
+  document.getElementById('setCurrentTime').addEventListener('click', function() {
+    const now = new Date();
+    const pad = (value) => String(value).padStart(2, '0');
+    document.getElementById('check_time').value = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  });
+</script>
 {% endblock %}
