@@ -1,34 +1,99 @@
 {% extends "base.html" %}
 
 {% block content %}
-<section class="search-panel">
-	<div class="search-title-row">
-		<div>
-			<p class="eyebrow">SHELTER SEARCH</p>
-			<h1 data-ja="避難所を探す" data-en="Find a shelter">避難所を探す</h1>
-			<p class="search-lead" data-ja="場所と必要なサポートを選ぶと、条件に合う避難所を表示します。" data-en="Choose a location and support needs to find matching shelters.">場所と必要なサポートを選ぶと、条件に合う避難所を表示します。</p>
-		</div>
-		<span class="search-mark" aria-hidden="true">⌕</span>
-	</div>
+<style>
+  .search-page { width: min(910px, calc(100% - 40px)); margin: 30px auto 75px; }
+  .search-section { margin-top: 18px; padding: 24px 27px; border: 1px solid #edf1f7; border-radius: 15px; background: #fff; box-shadow: 0 6px 23px rgba(56, 76, 107, .08); }
+  .search-section h2 { margin: 0 0 7px; color: #285aa8; font-size: 20px; }
+  .search-section p { margin: 0 0 18px; color: #69778a; font-size: 14px; line-height: 1.6; }
+  .search-section label, .search-section legend { display: block; margin-bottom: 8px; color: #37475c; font-size: 14px; font-weight: 800; }
+  .search-section input[type="search"] { width: 100%; padding: 13px 15px; border: 1px solid #dce3ed; border-radius: 8px; color: #3f4b5d; font: inherit; outline: none; }
+  .search-section input[type="search"]:focus { border-color: #5c87ce; box-shadow: 0 0 0 3px rgba(40, 91, 171, .12); }
+  .nearby-button { margin-top: 4px; padding: 12px 18px; border: 0; border-radius: 8px; background: #285bab; color: #fff; font: inherit; font-weight: 800; cursor: pointer; }
+  .nearby-button:hover { background: #214d99; }
+  .nearby-button:disabled { opacity: .65; cursor: wait; }
+  .location-status { min-height: 22px; margin: 12px 0 0 !important; color: #285aa8 !important; font-size: 13px !important; }
+  .detail-form { display: grid; gap: 22px; }
+  .search-fieldset { margin: 0; padding: 0; border: 0; }
+  .concern-list { display: flex; flex-wrap: wrap; gap: 9px 18px; }
+  .concern-list label { display: flex; align-items: center; gap: 7px; margin: 0; color: #4a596b; font-size: 13px; font-weight: 400; cursor: pointer; }
+  .concern-list input { accent-color: #285bab; }
+  .detail-submit { justify-self: start; margin-top: -5px; }
+  .search-back-link { display: inline-block; margin-top: 18px; color: #285aa8; font-size: 14px; font-weight: 700; text-decoration: none; }
+  .search-back-link:hover { text-decoration: underline; }
+  @media (max-width: 600px) {
+    .search-page { width: calc(100% - 24px); margin-top: 18px; }
+    .search-section { padding: 20px 16px; border-radius: 13px; }
+    .search-section h2 { font-size: 18px; }
+    .nearby-button, .detail-submit { width: 100%; }
+  }
+</style>
 
-	<form action="/search_results" method="get" class="search-form">
-		<label for="location" data-ja="場所" data-en="Location">場所</label>
-		<input type="search" id="location" name="location" placeholder="地区名・住所を入力" data-placeholder-ja="地区名・住所を入力" data-placeholder-en="Enter a district or address" autocomplete="address-level2">
+<section class="search-page" aria-labelledby="search-page-heading">
+  <p class="eyebrow">SHELTER SEARCH</p>
+  <h1 id="search-page-heading" data-ja="避難所検索" data-en="Shelter search">避難所検索</h1>
 
-		<fieldset>
-			<legend data-ja="必要なサポート" data-en="Support needs">必要なサポート</legend>
-			<div class="requirement-grid">
-				<label><input type="checkbox" name="elderly" value="1"> <span data-ja="高齢者" data-en="Elderly people">高齢者</span></label>
-				<label><input type="checkbox" name="children" value="1"> <span data-ja="子供連れ" data-en="Families with children">子供連れ</span></label>
-				<label><input type="checkbox" name="foreigners" value="1"> <span data-ja="外国人" data-en="Foreign visitors">外国人</span></label>
-				<label><input type="checkbox" name="care" value="1"> <span data-ja="要介護者" data-en="People needing care">要介護者</span></label>
-				<label><input type="checkbox" name="pets" value="1"> <span data-ja="ペット" data-en="Pets">ペット</span></label>
-			</div>
-		</fieldset>
+  <section class="search-section" aria-labelledby="nearby-heading">
+    <h2 id="nearby-heading" data-ja="簡易検索" data-en="Quick search">簡易検索</h2>
+    <p data-ja="現在地から近い避難所を検索します。" data-en="Find shelters near your current location.">現在地から近い避難所を検索します。</p>
+    <form id="nearbySearchForm" action="{{ url_for('search_results') }}" method="get">
+      <input type="hidden" name="latitude" id="nearbyLatitude">
+      <input type="hidden" name="longitude" id="nearbyLongitude">
+      <button class="nearby-button" type="submit" id="nearbySearchButton" data-ja="最寄りの避難所を検索する" data-en="Find nearby shelters">最寄りの避難所を検索する</button>
+      <p class="location-status" id="nearbyStatus" role="status" aria-live="polite"></p>
+    </form>
+  </section>
 
-		<button type="submit" class="search-submit" data-ja="条件に合う避難所を検索" data-en="Search shelters">条件に合う避難所を検索</button>
-	</form>
+  <section class="search-section" aria-labelledby="detail-heading">
+    <h2 id="detail-heading" data-ja="詳細検索" data-en="Detailed search">詳細検索</h2>
+    <form id="detailSearchForm" class="detail-form" action="{{ url_for('search_results') }}" method="get">
+      <div>
+        <label for="shelterName" data-ja="避難所名：" data-en="Shelter name:">避難所名：</label>
+        <input type="search" id="shelterName" name="name" placeholder="避難所名を入力" data-placeholder-ja="避難所名を入力" data-placeholder-en="Enter shelter name">
+      </div>
 
-	<a class="all-shelters-link" href="/all_shelters" data-ja="条件を指定せず全施設を見る" data-en="View all shelters">条件を指定せず全施設を見る</a>
+      <fieldset class="search-fieldset">
+        <legend data-ja="配慮事項（複数選択可）" data-en="Support needs (select all that apply)">配慮事項（複数選択可）</legend>
+        <div class="concern-list">
+          <label><input type="checkbox" name="concern" value="高齢者（65歳以上）"><span data-ja="高齢者（65歳以上）" data-en="Older adults (65+)">高齢者（65歳以上）</span></label>
+          <label><input type="checkbox" name="concern" value="子供連れ"><span data-ja="子供連れ" data-en="Families with children">子供連れ</span></label>
+          <label><input type="checkbox" name="concern" value="障害者・要介護者"><span data-ja="障害者・要介護者" data-en="People with disabilities or care needs">障害者・要介護者</span></label>
+          <label><input type="checkbox" name="concern" value="外国人"><span data-ja="外国人" data-en="Foreign visitors">外国人</span></label>
+          <label><input type="checkbox" name="concern" value="ペット"><span data-ja="ペット" data-en="Pets">ペット</span></label>
+        </div>
+      </fieldset>
+
+      <button class="nearby-button detail-submit" type="submit" data-ja="条件を指定して検索" data-en="Search with these criteria">条件を指定して検索</button>
+    </form>
+  </section>
+
+  <a class="search-back-link" href="{{ url_for('all_shelters') }}" data-ja="登録されている避難所をすべて見る" data-en="View all registered shelters">登録されている避難所をすべて見る</a>
 </section>
+
+<script>
+  function requestCurrentLocation(form, statusElement, button, latitudeInput, longitudeInput, submitForm) {
+    if (!navigator.geolocation) {
+      statusElement.textContent = window.bousaiLanguage === 'en' ? 'This browser cannot access your location.' : 'このブラウザでは現在地を取得できません。';
+      return;
+    }
+    button.disabled = true;
+    statusElement.textContent = window.bousaiLanguage === 'en' ? 'Checking your current location...' : '現在地を確認しています...';
+    navigator.geolocation.getCurrentPosition(function(position) {
+      latitudeInput.value = position.coords.latitude;
+      longitudeInput.value = position.coords.longitude;
+      submitForm();
+    }, function() {
+      button.disabled = false;
+      statusElement.textContent = window.bousaiLanguage === 'en' ? 'Could not get your location. Please allow location access.' : '現在地を取得できませんでした。位置情報を許可してください。';
+    }, {enableHighAccuracy: true, timeout: 10000});
+  }
+
+  const nearbyForm = document.getElementById('nearbySearchForm');
+  const nearbyButton = document.getElementById('nearbySearchButton');
+  nearbyForm.addEventListener('submit', function(event) {
+    event.preventDefault();
+    requestCurrentLocation(nearbyForm, document.getElementById('nearbyStatus'), nearbyButton, document.getElementById('nearbyLatitude'), document.getElementById('nearbyLongitude'), function() { nearbyForm.submit(); });
+  });
+
+</script>
 {% endblock %}

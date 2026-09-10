@@ -1,19 +1,29 @@
 {% extends "base.html" %}
 
 {% block content %}
+<style>
+  .results-navigation { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 22px; }
+  .results-navigation a { color: #285aa8; font-size: 14px; font-weight: 700; text-decoration: none; }
+  .results-navigation a:hover { text-decoration: underline; }
+</style>
 <section class="results-header">
   <div>
     <p class="eyebrow">SEARCH RESULTS</p>
-    <h1 data-ja="検索結果" data-en="Search results">検索結果</h1>
-    <p class="result-count" data-ja="{{ results|length }} 件の避難所が見つかりました" data-en="{{ results|length }} shelter(s) found"><strong>{{ results|length }}</strong> 件の避難所が見つかりました</p>
+    {% if nearby %}
+      <h1 data-ja="最寄りの避難所" data-en="Nearby shelters">最寄りの避難所</h1>
+    {% else %}
+      <h1 data-ja="検索結果" data-en="Search results">検索結果</h1>
+    {% endif %}
+    <p class="result-count" data-ja="{{ results|length }}件の避難所が見つかりました。" data-en="{{ results|length }} shelter(s) found."><strong>{{ results|length }}</strong> 件の避難所が見つかりました。</p>
   </div>
-  <a class="edit-search" href="/shelter_search" data-ja="条件を変更" data-en="Change criteria">条件を変更</a>
+  <a class="edit-search" href="{{ url_for('shelter_search') }}" data-ja="条件を変更" data-en="Change criteria">条件を変更</a>
 </section>
 
-{% if location or selected_requirements %}
+{% if name or location or selected_concerns %}
 <div class="applied-filters">
+  {% if name %}<span class="filter-chip" data-ja="避難所名: {{ name }}" data-en="Shelter name: {{ name }}">避難所名: {{ name }}</span>{% endif %}
   {% if location %}<span class="filter-chip" data-ja="場所: {{ location }}" data-en="Location: {{ location }}">場所: {{ location }}</span>{% endif %}
-  {% for requirement in selected_requirements %}<span class="filter-chip">{{ requirement_labels[requirement] }}</span>{% endfor %}
+  {% for concern in selected_concerns %}<span class="filter-chip">{{ requirement_labels.get(concern, concern) }}</span>{% endfor %}
 </div>
 {% endif %}
 
@@ -55,11 +65,16 @@
 {% else %}
   <section class="empty-results">
     <div class="empty-icon" aria-hidden="true">⌕</div>
-    <h2 data-ja="条件に合う避難所が見つかりませんでした" data-en="No shelters match your criteria">条件に合う避難所が見つかりませんでした</h2>
+    <h2 data-ja="条件に一致する避難所が見つかりませんでした。" data-en="No shelters match your criteria.">条件に一致する避難所が見つかりませんでした。</h2>
     <p data-ja="場所を広げるか、必要なサポートの条件を減らして再検索してください。" data-en="Try a broader location or fewer support needs.">場所を広げるか、必要なサポートの条件を減らして再検索してください。</p>
-    <a class="search-submit" href="/shelter_search" data-ja="検索画面に戻る" data-en="Back to search">検索画面に戻る</a>
+    <a class="search-submit" href="{{ url_for('shelter_search') }}" data-ja="検索画面に戻る" data-en="Back to search">検索画面に戻る</a>
   </section>
 {% endif %}
+
+<nav class="results-navigation" aria-label="結果ページの移動">
+  <a href="{{ url_for('shelter_search') }}" data-ja="検索画面に戻る" data-en="Back to search">検索画面に戻る</a>
+  <a href="{{ url_for('index') }}" data-ja="トップページへ戻る" data-en="Back to home">トップページへ戻る</a>
+</nav>
 
 {% if mapped_results %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />

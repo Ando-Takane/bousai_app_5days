@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request, render_template, session, redirect, u
 from urllib.parse import urlparse, urljoin
 from functools import wraps
 import json
+import math
 import os
 import urllib.request
 from datetime import datetime, timedelta, timezone
@@ -164,8 +165,35 @@ FACILITY_TYPE_OPTIONS = (
 )
 DISASTER_TYPE_OPTIONS = ('津波', '地震', '洪水')
 
+def calculate_congestion(accepted_count, capacity):
+    """受入れ人数と収容人数の割合から混雑状況を判定する"""
+    try:
+        accepted = max(0, float(accepted_count))
+        total_capacity = float(capacity)
+    except (TypeError, ValueError):
+        return '空き'
+
+    if total_capacity <= 0:
+        return '空き'
+    occupancy_rate = accepted / total_capacity
+    if occupancy_rate <= 0.5:
+        return '空き'
+    if occupancy_rate < 0.8:
+        return 'やや混雑'
+    return '混雑'
+
+def refresh_shelter_congestion(items):
+    """受入れ人数を持つ避難所の混雑状況を最新の割合で更新する"""
+    for shelter in items:
+        if 'accepted_count' in shelter and 'capacity' in shelter:
+            shelter['congestion'] = calculate_congestion(
+                shelter.get('accepted_count'), shelter.get('capacity')
+            )
+    return items
+
 def sort_shelters_by_congestion(items):
     """避難所を空き、やや混雑、混雑の順に並べる"""
+    refresh_shelter_congestion(items)
     return sorted(
         items,
         key=lambda shelter: CONGESTION_ORDER.get(shelter.get('congestion'), 1)
@@ -180,19 +208,72 @@ def shelter_supports(shelter, requirement):
         return requirement in supports or SHELTER_REQUIREMENTS[requirement] in supports
     return bool(shelter.get(requirement, False))
 
-def search_shelters(location, requirements):
-    """場所と利用条件に一致する避難所を返す"""
-    location = location.strip().lower()
+CONCERN_TO_REQUIREMENT = {
+    '高齢者（65歳以上）': 'elderly',
+    '高齢者': 'elderly',
+    '子供連れ': 'children',
+    '障害者・要介護者': 'care',
+    '要介護者': 'care',
+    '外国人': 'foreigners',
+    'ペット': 'pets'
+}
+
+def valid_coordinates(latitude, longitude):
+    """緯度経度が数値として有効か確認する"""
+    try:
+        latitude = float(latitude)
+        longitude = float(longitude)
+    except (TypeError, ValueError):
+        return None
+    if not (math.isfinite(latitude) and math.isfinite(longitude)):
+        return None
+    if not -90 <= latitude <= 90 or not -180 <= longitude <= 180:
+        return None
+    return latitude, longitude
+
+def haversine_distance(latitude, longitude, target_latitude, target_longitude):
+    """2地点間の距離をkmで返す"""
+    earth_radius = 6371.0
+    lat1, lat2 = math.radians(latitude), math.radians(target_latitude)
+    delta_lat = math.radians(target_latitude - latitude)
+    delta_longitude = math.radians(target_longitude - longitude)
+    value = (math.sin(delta_lat / 2) ** 2
+             + math.cos(lat1) * math.cos(lat2) * math.sin(delta_longitude / 2) ** 2)
+    return earth_radius * 2 * math.atan2(math.sqrt(value), math.sqrt(1 - value))
+
+def search_shelters(name='', concerns=None, latitude=None, longitude=None):
+    """避難所名、配慮事項、現在地に一致する避難所を返す"""
+    name = (name or '').strip().casefold()
+    requirements = [
+        CONCERN_TO_REQUIREMENT.get(concern, concern)
+        for concern in (concerns or [])
+    ]
+    current_coordinates = valid_coordinates(latitude, longitude)
     results = []
     for shelter in shelters:
-        shelter_location = ' '.join(
-            str(shelter.get(field, ''))
-            for field in ('name', 'location', 'district', 'address')
-        ).lower()
-        if location and location not in shelter_location:
+        shelter_name = str(shelter.get('name', ''))
+        if name and name not in shelter_name.casefold():
             continue
-        if all(shelter_supports(shelter, requirement) for requirement in requirements):
-            results.append(shelter)
+        if not all(shelter_supports(shelter, requirement) for requirement in requirements):
+            continue
+        result = dict(shelter)
+        result['_distance_km'] = None
+        if current_coordinates:
+            shelter_coordinates = valid_coordinates(
+                shelter.get('latitude'), shelter.get('longitude')
+            )
+            if shelter_coordinates:
+                result['_distance_km'] = haversine_distance(
+                    current_coordinates[0], current_coordinates[1],
+                    shelter_coordinates[0], shelter_coordinates[1]
+                )
+        results.append(result)
+
+    if current_coordinates:
+        results.sort(key=lambda shelter: (
+            shelter['_distance_km'] is None,
+            shelter['_distance_km'] if shelter['_distance_km'] is not None else 0
+        ))
     return results
 
 @app.context_processor
@@ -342,8 +423,18 @@ def shelter_register():
         'facility_type_options': FACILITY_TYPE_OPTIONS,
         'disaster_type_options': DISASTER_TYPE_OPTIONS,
         'congestion_options': CONGESTION_OPTIONS,
-        'capacity_options': CAPACITY_OPTIONS
+        'capacity_options': CAPACITY_OPTIONS,
+        'shelters': shelters
     }
+    edit_id = request.args.get('edit_id', '').strip()
+    edit_shelter = next(
+        (shelter for shelter in shelters if str(shelter.get('id')) == edit_id),
+        None
+    ) if edit_id else None
+    if edit_id and edit_shelter is None:
+        template_data.update(error=True, message='編集対象の避難所が見つかりません。')
+    if edit_shelter:
+        template_data['edit_shelter'] = edit_shelter
 
     if request.method == 'POST':
         name = request.form.get('name', '').strip()
@@ -356,14 +447,10 @@ def shelter_register():
             template_data.update(error=True, message='内容を確認したことにチェックしてください。')
             return render_template('shelter_register.html', **template_data)
 
-        next_id = max((shelter.get('id', 0) for shelter in shelters), default=0) + 1
         selected_supports = [
             requirement for requirement in SHELTER_REQUIREMENTS
             if request.form.get(requirement) == '1'
         ]
-        congestion = request.form.get('congestion', '空き')
-        if congestion not in CONGESTION_OPTIONS:
-            congestion = '空き'
         try:
             capacity = int(request.form.get('capacity', '100'))
         except ValueError:
@@ -388,8 +475,7 @@ def shelter_register():
         except ValueError:
             stock_count = 0
 
-        shelters.append({
-            'id': next_id,
+        shelter_data = {
             'name': name,
             'name_roman': name_roman,
             'facility_type': request.form.get('facility_type', '').strip(),
@@ -400,15 +486,32 @@ def shelter_register():
             'address': address,
             'address_english': request.form.get('address_english', '').strip(),
             'disaster_type': selected_disaster_types,
-            'congestion': congestion,
+            'congestion': calculate_congestion(accepted_count, capacity),
             'congestion_updated_at': get_japan_time(),
             'capacity': capacity
-        })
+        }
+        if edit_shelter:
+            edit_shelter.update(shelter_data)
+            success_message = f'「{name}」の情報を更新しました。'
+        else:
+            next_id = max((shelter.get('id', 0) for shelter in shelters), default=0) + 1
+            shelters.append({'id': next_id, **shelter_data})
+            success_message = f'「{name}」を登録しました。'
         save_shelters()
-        template_data.update(success=True, message=f'「{name}」を登録しました。', registered_name=name)
+        template_data.update(success=True, message=success_message, registered_name=name)
         return render_template('shelter_register.html', **template_data)
 
     return render_template('shelter_register.html', **template_data)
+
+
+@app.route('/shelter_delete/<int:shelter_id>', methods=['POST'])
+@login_required
+def shelter_delete(shelter_id):
+    shelter = next((item for item in shelters if item.get('id') == shelter_id), None)
+    if shelter is not None:
+        shelters.remove(shelter)
+        save_shelters()
+    return redirect(url_for('shelter_register', deleted='1'))
 
 # 避難所検索ページ
 @app.route('/shelter_search')
@@ -421,9 +524,11 @@ def all_shelters():
     return render_template(
         'search_results.html',
         results=sort_shelters_by_congestion(shelters),
+        name='',
         location='',
-        selected_requirements=[],
-        requirement_labels=SHELTER_REQUIREMENTS
+        selected_concerns=[],
+        requirement_labels=SHELTER_REQUIREMENTS,
+        nearby=False
     )
 
 
@@ -437,20 +542,42 @@ def board():
 # 検索結果ページ：templates/search_results.html を返す
 @app.route('/search_results')
 def search_results():
+    name = request.args.get('name', '').strip()
     location = request.args.get('location', '')
+    selected_concerns = request.args.getlist('concern')
     selected_requirements = [
         requirement for requirement in SHELTER_REQUIREMENTS
         if request.args.get(requirement) == '1'
     ]
-    results = sort_shelters_by_congestion(
-        search_shelters(location, selected_requirements)
+    selected_concerns.extend(selected_requirements)
+    latitude = request.args.get('latitude', '')
+    longitude = request.args.get('longitude', '')
+    current_coordinates = valid_coordinates(latitude, longitude)
+    results = search_shelters(
+        name=name,
+        concerns=selected_concerns,
+        latitude=latitude,
+        longitude=longitude
     )
+    if location and not name:
+        location_query = location.casefold()
+        results = [
+            shelter for shelter in results
+            if location_query in ' '.join(
+                str(shelter.get(field, ''))
+                for field in ('name', 'location', 'district', 'address')
+            ).casefold()
+        ]
+    if not current_coordinates:
+        results = sort_shelters_by_congestion(results)
     return render_template(
         'search_results.html',
         results=results,
+        name=name,
         location=location,
-        selected_requirements=selected_requirements,
-        requirement_labels=SHELTER_REQUIREMENTS
+        selected_concerns=selected_concerns,
+        requirement_labels=SHELTER_REQUIREMENTS,
+        nearby=bool(current_coordinates)
     )
 
 # JSON API：/shelters?district=地区名

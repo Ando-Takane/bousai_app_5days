@@ -8,7 +8,10 @@
     "capacity": 200,
     "latitude": 40.8246,
     "longitude": 140.7406,
-    "supports": ["elderly", "children"]
+    "supports": [
+      "elderly",
+      "children"
+    ]
   },
   {
     "id": 2,
@@ -18,8 +21,11 @@
     "congestion_updated_at": "2026年09月09日 09:05",
     "capacity": 100,
     "latitude": 40.8271,
-    "longitude": 140.7480,
-    "supports": ["foreigners", "care"]
+    "longitude": 140.748,
+    "supports": [
+      "foreigners",
+      "care"
+    ]
   },
   {
     "id": 5,
@@ -30,7 +36,10 @@
     "capacity": 200,
     "latitude": 40.8218,
     "longitude": 140.7325,
-    "supports": ["pets", "children"]
+    "supports": [
+      "pets",
+      "children"
+    ]
   },
   {
     "id": 6,
@@ -41,7 +50,11 @@
     "capacity": 100,
     "latitude": 40.8178,
     "longitude": 140.7421,
-    "supports": ["elderly", "care", "pets"]
+    "supports": [
+      "elderly",
+      "care",
+      "pets"
+    ]
   },
   {
     "id": 7,
@@ -52,7 +65,10 @@
     "capacity": 200,
     "latitude": 40.8332,
     "longitude": 140.7392,
-    "supports": ["children", "foreigners"]
+    "supports": [
+      "children",
+      "foreigners"
+    ]
   },
   {
     "id": 8,
@@ -62,8 +78,12 @@
     "congestion_updated_at": "2026年09月09日 09:25",
     "capacity": 100,
     "latitude": 40.8231,
-    "longitude": 140.7450,
-    "supports": ["elderly", "foreigners", "care"]
+    "longitude": 140.745,
+    "supports": [
+      "elderly",
+      "foreigners",
+      "care"
+    ]
   },
   {
     "id": 9,
@@ -74,17 +94,33 @@
     "capacity": 200,
     "latitude": 40.8295,
     "longitude": 140.7531,
-    "supports": ["pets", "children", "foreigners"]
+    "supports": [
+      "pets",
+      "children",
+      "foreigners"
+    ]
   },
   {
-    "id": 10,
-    "name": "かきく",
-    "address": "青森市西町8-9",
+    "id": 11,
+    "name": "青森市中央市民センター",
+    "name_roman": "AOMORI CHUO SIMIN SENTA",
+    "facility_type": "指定避難所",
+    "supports": [
+      "elderly",
+      "children",
+      "foreigners",
+      "pets"
+    ],
+    "accepted_count": 90,
+    "check_time": "2026-09-10T11:28",
+    "stock_count": 0,
+    "address": "青森市松原1-6-15",
+    "address_english": "",
+    "disaster_type": [
+      "地震"
+    ],
     "congestion": "空き",
-    "congestion_updated_at": "2026年09月09日 09:35",
-    "capacity": 100,
-    "latitude": 40.8199,
-    "longitude": 140.7298,
-    "supports": ["care", "pets"]
+    "congestion_updated_at": "2026年09月10日 11:42",
+    "capacity": 100
   }
 ]
